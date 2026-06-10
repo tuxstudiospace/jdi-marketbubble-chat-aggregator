@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Avatar, SourceBadge } from '../components/Avatar.jsx';
-import { IconReply, IconPin, IconStar, IconHeart } from '../icons/index.jsx';
+import { PLATFORMS } from '../data/platforms.js';
+import { IconReply, IconPin, IconStar, IconHeart, IconHide, IconExternal } from '../icons/index.jsx';
 
 export function ago(ts, now) {
   const s = Math.max(0, Math.floor((now - ts) / 1000));
@@ -92,13 +93,28 @@ function QuickAction({ children, title, onClick }) {
 
 export function FeedMessage({ m, now, accent, selected, onSelect, compact, isNew, onAction }) {
   const [hov, setHov] = useState(false);
+  const [showDetail, setShowDetail] = useState(false);
+  const rowRef = useRef(null);
+  const timerRef = useRef(null);
   const pad = compact ? '9px 14px' : '13px 16px';
   const nameColor = m.user.color || '#f0f3fb';
+
+  const onEnter = () => {
+    setHov(true);
+    timerRef.current = setTimeout(() => setShowDetail(true), 400);
+  };
+  const onLeave = () => {
+    setHov(false);
+    setShowDetail(false);
+    clearTimeout(timerRef.current);
+  };
+
   return (
     <div
+      ref={rowRef}
       onClick={() => onSelect(m)}
-      onMouseEnter={() => setHov(true)}
-      onMouseLeave={() => setHov(false)}
+      onMouseEnter={onEnter}
+      onMouseLeave={onLeave}
       style={{
         display: 'flex',
         gap: 12,
@@ -178,6 +194,7 @@ export function FeedMessage({ m, now, accent, selected, onSelect, compact, isNew
         )}
       </div>
 
+      {/* Quick action buttons on hover */}
       <div
         style={{
           display: 'flex',
@@ -189,34 +206,114 @@ export function FeedMessage({ m, now, accent, selected, onSelect, compact, isNew
           pointerEvents: hov ? 'auto' : 'none',
         }}
       >
-        <QuickAction
-          title="Reply"
-          onClick={(e) => {
-            e.stopPropagation();
-            onAction('reply', m);
-          }}
-        >
+        <QuickAction title="Reply" onClick={(e) => { e.stopPropagation(); onAction('reply', m); }}>
           <IconReply size={15} />
         </QuickAction>
-        <QuickAction
-          title="Pin"
-          onClick={(e) => {
-            e.stopPropagation();
-            onAction('pin', m);
-          }}
-        >
+        <QuickAction title="Pin" onClick={(e) => { e.stopPropagation(); onAction('pin', m); }}>
           <IconPin size={15} />
         </QuickAction>
-        <QuickAction
-          title="Important"
-          onClick={(e) => {
-            e.stopPropagation();
-            onAction('important', m);
-          }}
-        >
+        <QuickAction title="Important" onClick={(e) => { e.stopPropagation(); onAction('important', m); }}>
           <IconStar size={15} />
         </QuickAction>
       </div>
+
+      {/* Hover detail popover */}
+      {showDetail && (
+        <div
+          style={{
+            position: 'absolute',
+            right: '100%',
+            top: 0,
+            marginRight: 8,
+            width: 280,
+            padding: '16px 18px',
+            borderRadius: 18,
+            background: 'rgba(255,255,255,0.92)',
+            backdropFilter: 'blur(24px) saturate(140%)',
+            WebkitBackdropFilter: 'blur(24px) saturate(140%)',
+            border: '1px solid rgba(255,255,255,0.8)',
+            boxShadow: '0 16px 48px rgba(14,22,42,0.22), 0 0 0 1px rgba(14,22,42,0.04)',
+            zIndex: 100,
+            animation: 'msgIn .18s ease',
+            pointerEvents: 'auto',
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 11, marginBottom: 14 }}>
+            <Avatar user={m.user} size={42} accent={accent} tone="light" />
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontFamily: 'var(--ui)', fontWeight: 700, fontSize: 15, color: '#0c1220' }}>
+                {m.user.name}
+              </div>
+              <div style={{ marginTop: 4 }}>
+                <SourceBadge id={m.platform} accent={accent} tone="light" />
+              </div>
+            </div>
+          </div>
+          <div
+            style={{
+              padding: '12px 14px',
+              borderRadius: 14,
+              background: 'rgba(199,214,240,0.4)',
+              border: '1px solid rgba(255,255,255,0.6)',
+              fontSize: 13.5,
+              lineHeight: 1.5,
+              color: '#0e1424',
+              wordBreak: 'break-word',
+              marginBottom: 12,
+            }}
+          >
+            {m.text}
+            <div style={{ marginTop: 8, fontSize: 11.5, color: '#7a8294', fontFamily: 'var(--ui)' }}>
+              {ago(m.ts, now)} ago
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+            <HoverAction onClick={() => onAction('reply', m)} icon={<IconReply size={14} />}>Reply</HoverAction>
+            <HoverAction onClick={() => onAction('pin', m)} icon={<IconPin size={14} />}>Pin</HoverAction>
+            <HoverAction onClick={() => onAction('important', m)} icon={<IconStar size={14} />}>Important</HoverAction>
+            <HoverAction onClick={() => onAction('hide', m)} icon={<IconHide size={14} />}>Hide</HoverAction>
+          </div>
+          <HoverAction
+            onClick={() => onAction('open', m)}
+            icon={<IconExternal size={14} />}
+            dark
+            style={{ marginTop: 6, width: '100%' }}
+          >
+            Open on {PLATFORMS[m.platform]?.name}
+          </HoverAction>
+        </div>
+      )}
     </div>
+  );
+}
+
+function HoverAction({ children, icon, onClick, dark, style }) {
+  const [h, setH] = useState(false);
+  return (
+    <button
+      onClick={(e) => { e.stopPropagation(); onClick(); }}
+      onMouseEnter={() => setH(true)}
+      onMouseLeave={() => setH(false)}
+      style={{
+        height: 34,
+        borderRadius: 9999,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 6,
+        background: dark ? (h ? '#1c2335' : '#0e1424') : (h ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.6)'),
+        color: dark ? '#f1f3fa' : '#0e1424',
+        border: dark ? 'none' : '1px solid rgba(14,22,42,0.08)',
+        fontFamily: 'var(--ui)',
+        fontWeight: 600,
+        fontSize: 12,
+        cursor: 'pointer',
+        transition: 'background .12s ease',
+        ...style,
+      }}
+    >
+      {icon}{children}
+    </button>
   );
 }

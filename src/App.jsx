@@ -334,27 +334,6 @@ export default function App() {
                 onAction={onAction}
               />
             </FloatingCard>
-            <FloatingCard
-              title="Message Detail"
-              defaultX={10}
-              defaultY={460}
-              defaultW={620}
-              defaultH={320}
-              minW={300}
-              minH={200}
-              zIndex={topCard === 'detail' ? topZ : 10}
-              onFocus={() => bringToFront('detail')}
-              storageKey="uca:card:detail2"
-            >
-              <RightPanel
-                message={selected}
-                now={now}
-                accent={t.accents}
-                onClose={() => setSelected(null)}
-                onAction={onAction}
-                embedded
-              />
-            </FloatingCard>
           </div>
         )}
       </main>
