@@ -50,6 +50,8 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const isMobile = winW <= 768;
   const [topCard, setTopCard] = useState('feed');
+  const [topZ, setTopZ] = useState(12);
+  const bringToFront = (card) => { setTopCard(card); setTopZ((z) => z + 1); };
 
   const filterRef = useRef('all');
   useEffect(() => {
@@ -283,30 +285,30 @@ export default function App() {
             {showVideo && (
               <FloatingCard
                 title="Live Stream"
-                defaultX={20}
-                defaultY={10}
-                defaultW={580}
-                defaultH={400}
+                defaultX={10}
+                defaultY={6}
+                defaultW={620}
+                defaultH={440}
                 minW={360}
                 minH={260}
-                zIndex={topCard === 'video' ? 12 : 10}
-                onFocus={() => setTopCard('video')}
-                storageKey="uca:card:video"
+                zIndex={topCard === 'video' ? topZ : 10}
+                onFocus={() => bringToFront('video')}
+                storageKey="uca:card:video2"
               >
                 <VideoPanel channels={channels} accent={t.accents} embedded />
               </FloatingCard>
             )}
             <FloatingCard
               title={filter === 'all' ? 'Live Feed' : `${PLATFORMS[filter]?.name || filter} Feed`}
-              defaultX={620}
-              defaultY={10}
-              defaultW={560}
-              defaultH={580}
-              minW={340}
-              minH={300}
-              zIndex={topCard === 'feed' ? 12 : 10}
-              onFocus={() => setTopCard('feed')}
-              storageKey="uca:card:feed"
+              defaultX={650}
+              defaultY={6}
+              defaultW={480}
+              defaultH={540}
+              minW={320}
+              minH={280}
+              zIndex={topCard === 'feed' ? topZ : 10}
+              onFocus={() => bringToFront('feed')}
+              storageKey="uca:card:feed2"
             >
               <FeedPanelInner
                 feedRef={feedRef}
@@ -330,6 +332,27 @@ export default function App() {
                 setSelected={setSelected}
                 newSet={newSet}
                 onAction={onAction}
+              />
+            </FloatingCard>
+            <FloatingCard
+              title="Message Detail"
+              defaultX={10}
+              defaultY={460}
+              defaultW={620}
+              defaultH={320}
+              minW={300}
+              minH={200}
+              zIndex={topCard === 'detail' ? topZ : 10}
+              onFocus={() => bringToFront('detail')}
+              storageKey="uca:card:detail2"
+            >
+              <RightPanel
+                message={selected}
+                now={now}
+                accent={t.accents}
+                onClose={() => setSelected(null)}
+                onAction={onAction}
+                embedded
               />
             </FloatingCard>
           </div>

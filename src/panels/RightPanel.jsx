@@ -12,10 +12,10 @@ import {
 } from '../icons/index.jsx';
 import { ago } from '../feed/FeedMessage.jsx';
 
-export function RightPanel({ message, now, accent, onClose, onAction, recent = [] }) {
-  return (
-    <aside
-      style={{
+export function RightPanel({ message, now, accent, onClose, onAction, recent = [], embedded }) {
+  const outerStyle = embedded
+    ? { display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, background: 'rgba(255,255,255,0.55)' }
+    : {
         width: 340,
         flexShrink: 0,
         height: '100%',
@@ -28,8 +28,9 @@ export function RightPanel({ message, now, accent, onClose, onAction, recent = [
         flexDirection: 'column',
         position: 'relative',
         zIndex: 2,
-      }}
-    >
+      };
+  return (
+    <aside style={outerStyle}>
       <div
         style={{
           padding: '18px 20px 14px',
