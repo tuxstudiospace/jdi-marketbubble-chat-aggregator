@@ -1,0 +1,93 @@
+:root {
+  --void: #eef2fb;
+  --char: rgba(255, 255, 255, 0.62);
+  --iron: rgba(255, 255, 255, 0.85);
+  --slate: rgba(13, 21, 46, 0.08);
+  --smoke: #9099ab;
+  --graphite: rgba(255, 255, 255, 0.72);
+  --ink: rgba(14, 22, 42, 0.06);
+  --fog: #7a8294;
+  --mist: #4f586c;
+  --ash: #5b6478;
+  --bone: #0e1424;
+  --paper: #ffffff;
+
+  --hair: rgba(14, 22, 42, 0.07);
+  --hair-strong: rgba(14, 22, 42, 0.13);
+
+  --accent: #d4f54a;
+  --accent-deep: #b9e034;
+  --accent-ink: #0c1220;
+  --notify: #d4f54a;
+
+  --glow-hue: 222;
+
+  --sans: 'DM Sans', 'Inter', system-ui, sans-serif;
+  --ui: 'Geist', 'Inter', system-ui, sans-serif;
+}
+
+.feed-panel {
+  --char: #1c2132;
+  --iron: #262c40;
+  --slate: #323a55;
+  --graphite: #161a28;
+  --ink: rgba(255, 255, 255, 0.07);
+  --fog: #7b859c;
+  --mist: #b1b9cc;
+  --ash: #98a0b4;
+  --bone: #f0f3fb;
+  --paper: #ffffff;
+  --hair: rgba(255, 255, 255, 0.07);
+  --hair-strong: rgba(255, 255, 255, 0.14);
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background:
+    radial-gradient(1200px 700px at 80% -10%, hsla(var(--glow-hue), 60%, 78%, 0.55) 0%, transparent 60%),
+    linear-gradient(135deg, #d6e1f3 0%, #e1ddea 55%, #efddd0 100%);
+  background-attachment: fixed;
+  color: var(--bone);
+  font-family: var(--sans);
+  font-feature-settings: 'ss01' on, 'cv11' on;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+#root { height: 100vh; }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb {
+  background: rgba(14, 22, 42, 0.14);
+  border-radius: 9999px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(14, 22, 42, 0.22); background-clip: padding-box; }
+.feed-panel ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.10); background-clip: padding-box; }
+::-webkit-scrollbar-track { background: transparent; }
+
+input, button { font-family: inherit; }
+button { cursor: pointer; }
+
+@keyframes msgIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes shimmer {
+  0% { background-position: -340px 0; }
+  100% { background-position: 340px 0; }
+}
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(212, 245, 74, 0.45); }
+  50% { box-shadow: 0 0 0 6px rgba(212, 245, 74, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.001ms !important; }
+}
