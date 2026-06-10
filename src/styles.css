@@ -22,8 +22,8 @@
 
   --glow-hue: 222;
 
-  --sans: 'DM Sans', 'Inter', system-ui, sans-serif;
-  --ui: 'Geist', 'Inter', system-ui, sans-serif;
+  --sans: 'Domine', 'DM Sans', 'Inter', system-ui, serif;
+  --ui: 'Domine', 'Geist', 'Inter', system-ui, serif;
 }
 
 .feed-panel {

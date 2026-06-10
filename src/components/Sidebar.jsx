@@ -180,19 +180,18 @@ export function Sidebar({ sources, filter, onFilter, accent, counts, totalUnread
       }}
     >
       <div style={{ padding: '22px 22px 18px', display: 'flex', alignItems: 'center', gap: 10 }}>
-        <div
+        <img
+          src="/brand-icon.svg"
+          alt=""
+          width={28}
+          height={28}
           style={{
             width: 28,
             height: 28,
-            borderRadius: 9,
-            background: 'linear-gradient(150deg, #0e1424, #2a324a)',
-            display: 'grid',
-            placeItems: 'center',
-            boxShadow: '0 4px 12px rgba(14,22,42,0.18)',
+            borderRadius: 6,
+            color: '#0e1424',
           }}
-        >
-          <span style={{ width: 10, height: 10, borderRadius: 3, background: 'var(--accent)' }} />
-        </div>
+        />
         <div
           style={{
             fontFamily: 'var(--ui)',
@@ -202,7 +201,7 @@ export function Sidebar({ sources, filter, onFilter, accent, counts, totalUnread
             color: '#0e1424',
           }}
         >
-          Dimension
+          Market Bubble
         </div>
       </div>
 

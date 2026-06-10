@@ -4,7 +4,8 @@ import { Toolbar } from './components/Toolbar.jsx';
 import { FeedMessage } from './feed/FeedMessage.jsx';
 import { LoadingState, EmptyState, DisconnectedState, ErrorState } from './feed/EdgeStates.jsx';
 import { RightPanel } from './panels/RightPanel.jsx';
-import { DevSwitcher } from './panels/DevSwitcher.jsx';
+// import { DevSwitcher } from './panels/DevSwitcher.jsx';
+import { VideoPanel } from './components/VideoPanel.jsx';
 import {
   TweaksPanel,
   TweakSection,
@@ -44,6 +45,7 @@ export default function App() {
   const [unread, setUnread] = useState({ twitch: 0, x: 0, kick: 0 });
   const [previewState, setPreviewState] = useState(null); // null = live mode
   const [toast, setToast] = useState(null);
+  const [showVideo, setShowVideo] = useLocalStorage('uca:showVideo', true);
 
   const filterRef = useRef('all');
   useEffect(() => {
@@ -220,6 +222,8 @@ export default function App() {
           accent={t.accents}
         />
 
+        {showVideo && <VideoPanel channels={channels} accent={t.accents} />}
+
         <div
           className="feed-panel"
           style={{
@@ -303,6 +307,25 @@ export default function App() {
                 LIVE
               </span>
             )}
+            <button
+              onClick={() => setShowVideo((v) => !v)}
+              style={{
+                height: 26,
+                padding: '0 11px',
+                borderRadius: 9999,
+                background: showVideo ? 'rgba(212,245,74,0.12)' : 'rgba(255,255,255,0.05)',
+                border: showVideo
+                  ? '1px solid rgba(212,245,74,0.28)'
+                  : '1px solid rgba(255,255,255,0.08)',
+                color: showVideo ? 'var(--accent)' : '#b0b8cc',
+                fontFamily: 'var(--ui)',
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              {showVideo ? 'Hide video' : 'Show video'}
+            </button>
             {messages.length > 0 && (
               <button
                 onClick={clearMessages}
@@ -375,13 +398,7 @@ export default function App() {
         />
       )}
 
-      <DevSwitcher
-        state={previewState || 'connected'}
-        onState={(s) => {
-          setPreviewState(s === 'connected' ? null : s);
-          stickRef.current = true;
-        }}
-      />
+      {/* DevSwitcher removed */}
 
       {toast && (
         <div
