@@ -16,7 +16,7 @@ function embedUrl(source, channel) {
   return null;
 }
 
-export function VideoPanel({ channels, accent }) {
+export function VideoPanel({ channels, accent, mobile, embedded }) {
   // Watchable streams: twitch + kick only.
   const streams = useMemo(() => {
     const out = [];
@@ -34,25 +34,28 @@ export function VideoPanel({ channels, accent }) {
     streams.find((s) => `${s.source}:${s.channel}` === activeKey) || streams[0];
   const url = embedUrl(active.source, active.channel);
 
-  return (
-    <div
-      style={{
-        margin: '0 22px 14px',
-        borderRadius: 28,
+  const outerStyle = embedded
+    ? { display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, background: '#0c1020', overflow: 'hidden' }
+    : {
+        margin: mobile ? '0 8px 8px' : '0 22px 14px',
+        borderRadius: mobile ? 18 : 28,
         background: '#0c1020',
         border: '1px solid rgba(255,255,255,0.05)',
         boxShadow: '0 22px 60px rgba(14,22,42,0.22), inset 0 1px 0 rgba(255,255,255,0.05)',
         overflow: 'hidden',
         flexShrink: 0,
-      }}
-    >
+      };
+
+  return (
+    <div style={outerStyle}>
       <div
         style={{
           display: 'flex',
           alignItems: 'center',
           gap: 8,
-          padding: '12px 16px',
+          padding: embedded ? '8px 12px' : '12px 16px',
           overflowX: 'auto',
+          flexShrink: 0,
         }}
       >
         {streams.map((s) => {
@@ -67,8 +70,8 @@ export function VideoPanel({ channels, accent }) {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 7,
-                height: 30,
-                padding: '0 13px',
+                height: 28,
+                padding: '0 12px',
                 borderRadius: 9999,
                 border: isActive
                   ? `1px solid ${accent ? brand : 'rgba(212,245,74,0.4)'}`
@@ -76,20 +79,23 @@ export function VideoPanel({ channels, accent }) {
                 background: isActive ? 'rgba(255,255,255,0.09)' : 'rgba(255,255,255,0.04)',
                 color: isActive ? '#f0f3fb' : '#a2aabe',
                 fontFamily: 'var(--ui)',
-                fontSize: 12.5,
+                fontSize: 12,
                 fontWeight: 600,
                 cursor: 'pointer',
                 whiteSpace: 'nowrap',
               }}
             >
-              <PlatformGlyph id={s.source} size={13} accent={isActive} />
+              <PlatformGlyph id={s.source} size={12} accent={isActive} />
               {s.channel}
             </button>
           );
         })}
       </div>
 
-      <div style={{ position: 'relative', width: '100%', aspectRatio: '16 / 9', maxHeight: '46vh' }}>
+      <div style={embedded
+        ? { flex: 1, minHeight: 0, position: 'relative' }
+        : { position: 'relative', width: '100%', aspectRatio: '16 / 9', maxHeight: '34vh' }
+      }>
         <iframe
           key={url}
           src={url}

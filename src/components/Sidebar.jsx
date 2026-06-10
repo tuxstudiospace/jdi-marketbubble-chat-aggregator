@@ -158,7 +158,7 @@ function SidebarItem({
   );
 }
 
-export function Sidebar({ sources, filter, onFilter, accent, counts, totalUnread, channels, onAddChannel, onRemoveChannel }) {
+export function Sidebar({ sources, filter, onFilter, accent, counts, totalUnread, channels, onAddChannel, onRemoveChannel, mobile }) {
   const [expanded, setExpanded] = useState({});
   const toggle = (id) => setExpanded((p) => ({ ...p, [id]: !p[id] }));
 
@@ -183,11 +183,11 @@ export function Sidebar({ sources, filter, onFilter, accent, counts, totalUnread
         <img
           src="/brand-icon.svg"
           alt=""
-          width={28}
-          height={28}
+          width={34}
+          height={34}
           style={{
-            width: 28,
-            height: 28,
+            width: 34,
+            height: 34,
             borderRadius: 6,
             color: '#0e1424',
           }}
@@ -196,7 +196,7 @@ export function Sidebar({ sources, filter, onFilter, accent, counts, totalUnread
           style={{
             fontFamily: 'var(--ui)',
             fontWeight: 600,
-            fontSize: 16,
+            fontSize: 24,
             letterSpacing: '-0.01em',
             color: '#0e1424',
           }}

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { ChatHub } from '../chat/index.js';
 
-const MAX_MESSAGES = 200;
+const MAX_MESSAGES = 500;
 
 export function useChatStream(channels, { paused }) {
   const hubRef = useRef(null);

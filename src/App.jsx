@@ -6,6 +6,7 @@ import { LoadingState, EmptyState, DisconnectedState, ErrorState } from './feed/
 import { RightPanel } from './panels/RightPanel.jsx';
 // import { DevSwitcher } from './panels/DevSwitcher.jsx';
 import { VideoPanel } from './components/VideoPanel.jsx';
+import { FloatingCard } from './components/FloatingCard.jsx';
 import {
   TweaksPanel,
   TweakSection,
@@ -46,6 +47,9 @@ export default function App() {
   const [previewState, setPreviewState] = useState(null); // null = live mode
   const [toast, setToast] = useState(null);
   const [showVideo, setShowVideo] = useLocalStorage('uca:showVideo', true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const isMobile = winW <= 768;
+  const [topCard, setTopCard] = useState('feed');
 
   const filterRef = useRef('all');
   useEffect(() => {
@@ -196,17 +200,38 @@ export default function App() {
 
   return (
     <div style={{ display: 'flex', height: '100vh', position: 'relative', zIndex: 1 }}>
-      <Sidebar
-        sources={sources}
-        filter={filter}
-        onFilter={selectFilter}
-        accent={t.accents}
-        counts={unread}
-        totalUnread={totalUnread}
-        channels={channels}
-        onAddChannel={addChannel}
-        onRemoveChannel={removeChannel}
-      />
+      {isMobile ? (
+        sidebarOpen && (
+          <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)}>
+            <div className="sidebar-drawer" onClick={(e) => e.stopPropagation()}>
+              <Sidebar
+                sources={sources}
+                filter={filter}
+                onFilter={(f) => { selectFilter(f); setSidebarOpen(false); }}
+                accent={t.accents}
+                counts={unread}
+                totalUnread={totalUnread}
+                channels={channels}
+                onAddChannel={addChannel}
+                onRemoveChannel={removeChannel}
+                mobile
+              />
+            </div>
+          </div>
+        )
+      ) : (
+        <Sidebar
+          sources={sources}
+          filter={filter}
+          onFilter={selectFilter}
+          accent={t.accents}
+          counts={unread}
+          totalUnread={totalUnread}
+          channels={channels}
+          onAddChannel={addChannel}
+          onRemoveChannel={removeChannel}
+        />
+      )}
 
       <main style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', height: '100%' }}>
         <Toolbar
@@ -220,185 +245,96 @@ export default function App() {
           rate={messages.length > 0 ? Math.min(120, messages.length) : 0}
           connectedCount={connectedCount}
           accent={t.accents}
+          mobile={isMobile}
+          onMenuToggle={() => setSidebarOpen((o) => !o)}
         />
 
-        {showVideo && <VideoPanel channels={channels} accent={t.accents} />}
-
-        <div
-          className="feed-panel"
-          style={{
-            flex: 1,
-            minHeight: 0,
-            margin: '0 22px 22px',
-            borderRadius: 28,
-            background: '#14182c',
-            border: '1px solid rgba(255,255,255,0.04)',
-            boxShadow: '0 22px 60px rgba(14,22,42,0.22), inset 0 1px 0 rgba(255,255,255,0.05)',
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: 'hidden',
-            position: 'relative',
-          }}
-        >
-          <div
-            style={{
-              padding: '18px 22px 14px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 12,
-              borderBottom: '1px solid rgba(255,255,255,0.05)',
-            }}
-          >
-            <span
-              style={{
-                fontFamily: 'var(--ui)',
-                fontSize: 14.5,
-                fontWeight: 700,
-                color: '#f0f3fb',
-                letterSpacing: '-0.005em',
-              }}
-            >
-              {filter === 'all' ? 'Live feed' : `${PLATFORMS[filter]?.name || filter} feed`}
-            </span>
-            <span
-              style={{
-                minWidth: 26,
-                height: 22,
-                padding: '0 8px',
-                borderRadius: 9999,
-                background: 'var(--accent)',
-                color: 'var(--accent-ink)',
-                fontFamily: 'var(--ui)',
-                fontSize: 12,
-                fontWeight: 700,
-                display: 'grid',
-                placeItems: 'center',
-              }}
-            >
-              {filtered.length}
-            </span>
-            <div style={{ flex: 1 }} />
-            {!paused && connectedCount > 0 && (
-              <span
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 7,
-                  height: 26,
-                  padding: '0 11px',
-                  borderRadius: 9999,
-                  background: 'rgba(212,245,74,0.12)',
-                  border: '1px solid rgba(212,245,74,0.28)',
-                  color: 'var(--accent)',
-                  fontFamily: 'var(--ui)',
-                  fontSize: 12,
-                  fontWeight: 600,
-                }}
+        {isMobile ? (
+          <>
+            {showVideo && <VideoPanel channels={channels} accent={t.accents} mobile />}
+            <FeedPanel
+              feedRef={feedRef}
+              onScroll={onScroll}
+              filter={filter}
+              filtered={filtered}
+              paused={paused}
+              connectedCount={connectedCount}
+              showVideo={showVideo}
+              setShowVideo={setShowVideo}
+              clearMessages={clearMessages}
+              messages={messages}
+              overlayState={overlayState}
+              showOverlay={showOverlay}
+              hasAnyChannels={hasAnyChannels}
+              reconnect={reconnect}
+              compact={compact}
+              now={now}
+              accent={t.accents}
+              selected={selected}
+              setSelected={setSelected}
+              newSet={newSet}
+              onAction={onAction}
+              isMobile
+              style={{ flex: 1, minHeight: 0, margin: '0 8px 8px', borderRadius: 18 }}
+            />
+          </>
+        ) : (
+          <div style={{ flex: 1, minHeight: 0, position: 'relative' }}>
+            {showVideo && (
+              <FloatingCard
+                title="Live Stream"
+                defaultX={20}
+                defaultY={10}
+                defaultW={580}
+                defaultH={400}
+                minW={360}
+                minH={260}
+                zIndex={topCard === 'video' ? 12 : 10}
+                onFocus={() => setTopCard('video')}
+                storageKey="uca:card:video"
               >
-                <span
-                  style={{
-                    width: 6,
-                    height: 6,
-                    borderRadius: 9999,
-                    background: 'var(--accent)',
-                    animation: 'glowPulse 1.6s ease-in-out infinite',
-                  }}
-                />
-                LIVE
-              </span>
+                <VideoPanel channels={channels} accent={t.accents} embedded />
+              </FloatingCard>
             )}
-            <button
-              onClick={() => setShowVideo((v) => !v)}
-              style={{
-                height: 26,
-                padding: '0 11px',
-                borderRadius: 9999,
-                background: showVideo ? 'rgba(212,245,74,0.12)' : 'rgba(255,255,255,0.05)',
-                border: showVideo
-                  ? '1px solid rgba(212,245,74,0.28)'
-                  : '1px solid rgba(255,255,255,0.08)',
-                color: showVideo ? 'var(--accent)' : '#b0b8cc',
-                fontFamily: 'var(--ui)',
-                fontSize: 12,
-                fontWeight: 600,
-                cursor: 'pointer',
-              }}
+            <FloatingCard
+              title={filter === 'all' ? 'Live Feed' : `${PLATFORMS[filter]?.name || filter} Feed`}
+              defaultX={620}
+              defaultY={10}
+              defaultW={560}
+              defaultH={580}
+              minW={340}
+              minH={300}
+              zIndex={topCard === 'feed' ? 12 : 10}
+              onFocus={() => setTopCard('feed')}
+              storageKey="uca:card:feed"
             >
-              {showVideo ? 'Hide video' : 'Show video'}
-            </button>
-            {messages.length > 0 && (
-              <button
-                onClick={clearMessages}
-                style={{
-                  height: 26,
-                  padding: '0 11px',
-                  borderRadius: 9999,
-                  background: 'rgba(255,255,255,0.05)',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  color: '#b0b8cc',
-                  fontFamily: 'var(--ui)',
-                  fontSize: 12,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                Clear
-              </button>
-            )}
+              <FeedPanelInner
+                feedRef={feedRef}
+                onScroll={onScroll}
+                filter={filter}
+                filtered={filtered}
+                paused={paused}
+                connectedCount={connectedCount}
+                showVideo={showVideo}
+                setShowVideo={setShowVideo}
+                clearMessages={clearMessages}
+                messages={messages}
+                overlayState={overlayState}
+                showOverlay={showOverlay}
+                hasAnyChannels={hasAnyChannels}
+                reconnect={reconnect}
+                compact={compact}
+                now={now}
+                accent={t.accents}
+                selected={selected}
+                setSelected={setSelected}
+                newSet={newSet}
+                onAction={onAction}
+              />
+            </FloatingCard>
           </div>
-
-          <div
-            ref={feedRef}
-            onScroll={onScroll}
-            style={{
-              flex: 1,
-              overflowY: showOverlay && overlayState !== 'empty' ? 'hidden' : 'auto',
-              padding: showOverlay ? 0 : '8px 10px 14px',
-              display: 'flex',
-              flexDirection: 'column',
-            }}
-          >
-            {overlayState === 'loading' && <LoadingState />}
-            {overlayState === 'error' && <ErrorState name="Source" onRetry={reconnect} />}
-            {overlayState === 'disconnected' && (
-              <DisconnectedState name="Source" onReconnect={reconnect} />
-            )}
-            {overlayState === 'empty' && <EmptyState filter={filter} hasChannels={hasAnyChannels} />}
-            {!overlayState &&
-              (filtered.length === 0 ? (
-                <EmptyState filter={filter} hasChannels={hasAnyChannels} />
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: compact ? 1 : 3 }}>
-                  {filtered.map((m) => (
-                    <FeedMessage
-                      key={m.id}
-                      m={m}
-                      now={now}
-                      accent={t.accents}
-                      compact={compact}
-                      selected={selected && selected.id === m.id}
-                      isNew={newSet.has(m.id)}
-                      onSelect={(msg) => setSelected(msg)}
-                      onAction={onAction}
-                    />
-                  ))}
-                </div>
-              ))}
-          </div>
-        </div>
+        )}
       </main>
-
-      {showPanel && (
-        <RightPanel
-          message={selected}
-          now={now}
-          accent={t.accents}
-          onClose={() => setSelected(null)}
-          onAction={onAction}
-        />
-      )}
-
-      {/* DevSwitcher removed */}
 
       {toast && (
         <div
@@ -445,6 +381,143 @@ export default function App() {
         <TweakSection label="Atmosphere" />
         <TweakColorHue value={t.glowHue} onChange={(v) => setTweak('glowHue', v)} />
       </TweaksPanel>
+    </div>
+  );
+}
+
+function FeedHeaderBar({ filter, filtered, paused, connectedCount, showVideo, setShowVideo, clearMessages, messages, isMobile }) {
+  return (
+    <div
+      style={{
+        padding: isMobile ? '12px 14px 10px' : '12px 16px 10px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: isMobile ? 8 : 10,
+        borderBottom: '1px solid rgba(255,255,255,0.06)',
+        flexShrink: 0,
+      }}
+    >
+      <span style={{ fontFamily: 'var(--ui)', fontSize: 13, fontWeight: 700, color: '#f0f3fb' }}>
+        {filter === 'all' ? 'Live feed' : `${PLATFORMS[filter]?.name || filter} feed`}
+      </span>
+      <span
+        style={{
+          minWidth: 24, height: 20, padding: '0 7px', borderRadius: 9999,
+          background: 'var(--accent)', color: 'var(--accent-ink)',
+          fontFamily: 'var(--ui)', fontSize: 11, fontWeight: 700,
+          display: 'grid', placeItems: 'center',
+        }}
+      >
+        {filtered.length}
+      </span>
+      <div style={{ flex: 1 }} />
+      {!paused && connectedCount > 0 && (
+        <span
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+            height: 24, padding: '0 10px', borderRadius: 9999,
+            background: 'rgba(212,245,74,0.12)', border: '1px solid rgba(212,245,74,0.28)',
+            color: 'var(--accent)', fontFamily: 'var(--ui)', fontSize: 11, fontWeight: 600,
+          }}
+        >
+          <span style={{ width: 5, height: 5, borderRadius: 9999, background: 'var(--accent)', animation: 'glowPulse 1.6s ease-in-out infinite' }} />
+          LIVE
+        </span>
+      )}
+      <button
+        onClick={() => setShowVideo((v) => !v)}
+        style={{
+          height: 24, padding: '0 10px', borderRadius: 9999,
+          background: showVideo ? 'rgba(212,245,74,0.12)' : 'rgba(255,255,255,0.05)',
+          border: showVideo ? '1px solid rgba(212,245,74,0.28)' : '1px solid rgba(255,255,255,0.08)',
+          color: showVideo ? 'var(--accent)' : '#b0b8cc',
+          fontFamily: 'var(--ui)', fontSize: 11, fontWeight: 600, cursor: 'pointer',
+        }}
+      >
+        {showVideo ? 'Hide video' : 'Show video'}
+      </button>
+      {messages.length > 0 && (
+        <button
+          onClick={clearMessages}
+          style={{
+            height: 24, padding: '0 10px', borderRadius: 9999,
+            background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
+            color: '#b0b8cc', fontFamily: 'var(--ui)', fontSize: 11, fontWeight: 600, cursor: 'pointer',
+          }}
+        >
+          Clear
+        </button>
+      )}
+    </div>
+  );
+}
+
+function FeedScrollArea({ feedRef, onScroll, overlayState, showOverlay, hasAnyChannels, filter, reconnect, filtered, compact, now, accent, selected, setSelected, newSet, onAction, isMobile }) {
+  return (
+    <div
+      ref={feedRef}
+      onScroll={onScroll}
+      style={{
+        flex: 1,
+        overflowY: showOverlay && overlayState !== 'empty' ? 'hidden' : 'auto',
+        padding: showOverlay ? 0 : isMobile ? '6px 6px 10px' : '6px 8px 10px',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
+      {overlayState === 'loading' && <LoadingState />}
+      {overlayState === 'error' && <ErrorState name="Source" onRetry={reconnect} />}
+      {overlayState === 'disconnected' && <DisconnectedState name="Source" onReconnect={reconnect} />}
+      {overlayState === 'empty' && <EmptyState filter={filter} hasChannels={hasAnyChannels} />}
+      {!overlayState &&
+        (filtered.length === 0 ? (
+          <EmptyState filter={filter} hasChannels={hasAnyChannels} />
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: compact ? 1 : 3 }}>
+            {filtered.map((m) => (
+              <FeedMessage
+                key={m.id}
+                m={m}
+                now={now}
+                accent={accent}
+                compact={compact}
+                selected={selected && selected.id === m.id}
+                isNew={newSet.has(m.id)}
+                onSelect={(msg) => setSelected(msg)}
+                onAction={onAction}
+              />
+            ))}
+          </div>
+        ))}
+    </div>
+  );
+}
+
+function FeedPanelInner(props) {
+  return (
+    <>
+      <FeedHeaderBar {...props} />
+      <FeedScrollArea {...props} />
+    </>
+  );
+}
+
+function FeedPanel({ style, ...props }) {
+  return (
+    <div
+      className="feed-panel"
+      style={{
+        background: '#14182c',
+        border: '1px solid rgba(255,255,255,0.04)',
+        boxShadow: '0 22px 60px rgba(14,22,42,0.22), inset 0 1px 0 rgba(255,255,255,0.05)',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        position: 'relative',
+        ...style,
+      }}
+    >
+      <FeedPanelInner {...props} />
     </div>
   );
 }

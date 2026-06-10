@@ -1,7 +1,7 @@
 import React from 'react';
 import { PLATFORMS } from '../data/platforms.js';
 import { PlatformGlyph, StatusDot } from './Avatar.jsx';
-import { IconSearch, IconClose, IconPlay, IconPause } from '../icons/index.jsx';
+import { IconSearch, IconClose, IconPlay, IconPause, Icon } from '../icons/index.jsx';
 
 export function Toolbar({
   filter,
@@ -14,32 +14,54 @@ export function Toolbar({
   rate,
   connectedCount,
   accent,
+  mobile,
+  onMenuToggle,
 }) {
   const chips = [{ id: 'all', name: 'All' }].concat(sources.map((s) => ({ id: s.id, name: PLATFORMS[s.id].name })));
   return (
     <header
       style={{
         flexShrink: 0,
-        padding: '22px 26px 16px',
+        padding: mobile ? '14px 12px 10px' : '22px 26px 16px',
         display: 'flex',
         flexDirection: 'column',
-        gap: 16,
+        gap: mobile ? 10 : 16,
         position: 'relative',
         zIndex: 2,
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: mobile ? 10 : 18, flexWrap: mobile ? 'wrap' : 'nowrap' }}>
+        {mobile && (
+          <button
+            onClick={onMenuToggle}
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 12,
+              border: '1px solid rgba(14,22,42,0.1)',
+              background: 'rgba(255,255,255,0.65)',
+              color: '#0e1424',
+              display: 'grid',
+              placeItems: 'center',
+              flexShrink: 0,
+            }}
+          >
+            <Icon size={20}><path d="M4 7h16M4 12h16M4 17h16" /></Icon>
+          </button>
+        )}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 5, flex: mobile ? 1 : 'none', minWidth: 0 }}>
           <h1
             style={{
               margin: 0,
               fontFamily: 'var(--sans)',
               fontWeight: 700,
-              fontSize: 36,
+              fontSize: mobile ? 22 : 36,
               letterSpacing: '-0.035em',
               color: '#0c1220',
               lineHeight: 1,
               whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
             }}
           >
             Unified Live Feed
@@ -50,7 +72,7 @@ export function Toolbar({
               alignItems: 'center',
               gap: 8,
               fontFamily: 'var(--ui)',
-              fontSize: 13,
+              fontSize: mobile ? 11.5 : 13,
               color: '#5a6376',
             }}
           >
@@ -61,16 +83,17 @@ export function Toolbar({
           </div>
         </div>
 
-        <div style={{ flex: 1 }} />
+        {!mobile && <div style={{ flex: 1 }} />}
 
         <label
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: 9,
-            flex: '1 1 280px',
-            maxWidth: 300,
-            minWidth: 160,
+            flex: mobile ? '1 1 100%' : '1 1 280px',
+            maxWidth: mobile ? 'none' : 300,
+            minWidth: mobile ? 0 : 160,
+            order: mobile ? 10 : 0,
             height: 42,
             padding: '0 14px',
             borderRadius: 9999,
@@ -140,7 +163,7 @@ export function Toolbar({
         </button>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
         {chips.map((c) => {
           const active = filter === c.id;
           return (
@@ -176,7 +199,7 @@ export function Toolbar({
             fontFamily: 'var(--ui)',
             fontSize: 12.5,
             color: '#6b7488',
-            display: 'flex',
+            display: mobile ? 'none' : 'flex',
             alignItems: 'center',
             gap: 7,
             fontWeight: 500,
