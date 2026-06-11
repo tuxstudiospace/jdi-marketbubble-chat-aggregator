@@ -13,11 +13,13 @@ export function FloatingCard({
   zIndex = 10,
   onFocus,
   storageKey,
+  pinnedStyle,
 }) {
   const saved = storageKey ? (() => {
     try { return JSON.parse(localStorage.getItem(storageKey)); } catch { return null; }
   })() : null;
 
+  const [pinned, setPinned] = useState(saved?.pinned !== false);
   const [pos, setPos] = useState({
     x: saved?.x ?? defaultX,
     y: saved?.y ?? defaultY,
@@ -32,12 +34,12 @@ export function FloatingCard({
 
   useEffect(() => {
     if (storageKey) {
-      try { localStorage.setItem(storageKey, JSON.stringify(pos)); } catch {}
+      try { localStorage.setItem(storageKey, JSON.stringify({ ...pos, pinned })); } catch {}
     }
-  }, [pos, storageKey]);
+  }, [pos, pinned, storageKey]);
 
   const onDragStart = useCallback((e) => {
-    if (maximized) return;
+    if (maximized || pinned) return;
     e.preventDefault();
     onFocus?.();
     const startX = (e.touches ? e.touches[0].clientX : e.clientX) - pos.x;
@@ -62,10 +64,10 @@ export function FloatingCard({
     window.addEventListener('mouseup', onUp);
     window.addEventListener('touchmove', onMove, { passive: false });
     window.addEventListener('touchend', onUp);
-  }, [pos.x, pos.y, maximized, onFocus]);
+  }, [pos.x, pos.y, maximized, pinned, onFocus]);
 
   const onResizeStart = useCallback((e) => {
-    if (maximized) return;
+    if (maximized || pinned) return;
     e.preventDefault();
     e.stopPropagation();
     onFocus?.();
@@ -97,9 +99,10 @@ export function FloatingCard({
     window.addEventListener('mouseup', onUp);
     window.addEventListener('touchmove', onMove, { passive: false });
     window.addEventListener('touchend', onUp);
-  }, [pos.w, pos.h, minW, minH, maximized, onFocus]);
+  }, [pos.w, pos.h, minW, minH, maximized, pinned, onFocus]);
 
   const toggleMax = () => {
+    if (pinned) return;
     if (maximized) {
       if (preMax) setPos(preMax);
       setMaximized(false);
@@ -110,53 +113,73 @@ export function FloatingCard({
     }
   };
 
-  const style = maximized
-    ? { position: 'fixed', inset: 0, width: '100%', height: '100%', zIndex: zIndex + 1000 }
-    : { position: 'fixed', left: pos.x, top: pos.y, width: pos.w, height: pos.h, zIndex };
+  const togglePin = () => {
+    if (maximized) return;
+    setPinned((p) => !p);
+  };
+
+  const outerStyle = pinned
+    ? {
+        position: 'relative',
+        flex: 1,
+        minWidth: minW,
+        minHeight: minH,
+        ...pinnedStyle,
+      }
+    : maximized
+      ? { position: 'fixed', inset: 0, width: '100%', height: '100%', zIndex: zIndex + 1000 }
+      : { position: 'fixed', left: pos.x, top: pos.y, width: pos.w, height: pos.h, zIndex };
 
   return (
     <div
       ref={cardRef}
-      onMouseDown={() => onFocus?.()}
+      className="floating-card"
+      onMouseDown={() => !pinned && onFocus?.()}
       style={{
-        ...style,
+        ...outerStyle,
         display: 'flex',
         flexDirection: 'column',
         borderRadius: maximized ? 0 : 20,
         overflow: 'hidden',
         background: '#14182c',
         border: maximized ? 'none' : '1px solid rgba(255,255,255,0.08)',
-        boxShadow: maximized
-          ? 'none'
-          : '0 24px 80px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.04)',
+        boxShadow: pinned
+          ? '0 8px 30px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.04)'
+          : maximized
+            ? 'none'
+            : '0 24px 80px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.04)',
         transition: maximized ? 'all .25s cubic-bezier(.2,.8,.3,1)' : 'none',
       }}
     >
-      {/* Title bar — drag handle */}
+      {/* Title bar */}
       <div
+        className="card-titlebar"
         onMouseDown={onDragStart}
         onTouchStart={onDragStart}
-        onDoubleClick={toggleMax}
+        onDoubleClick={!pinned ? toggleMax : undefined}
         style={{
           flexShrink: 0,
           display: 'flex',
           alignItems: 'center',
           gap: 10,
-          padding: '0 14px',
+          padding: '0 10px 0 14px',
           height: 40,
           background: 'rgba(255,255,255,0.04)',
           borderBottom: '1px solid rgba(255,255,255,0.06)',
-          cursor: maximized ? 'default' : 'grab',
+          cursor: pinned ? 'default' : maximized ? 'default' : 'grab',
           userSelect: 'none',
         }}
       >
-        {/* Drag dots indicator */}
-        <span style={{ display: 'flex', gap: 3, opacity: 0.35 }}>
-          <span style={{ width: 4, height: 4, borderRadius: 2, background: '#a2aabe' }} />
-          <span style={{ width: 4, height: 4, borderRadius: 2, background: '#a2aabe' }} />
-          <span style={{ width: 4, height: 4, borderRadius: 2, background: '#a2aabe' }} />
-        </span>
+        {/* Drag dots — only show when unpinned */}
+        {!pinned && (
+          <span style={{ display: 'flex', gap: 3, opacity: 0.35 }}>
+            <span style={{ width: 4, height: 4, borderRadius: 2, background: '#a2aabe' }} />
+            <span style={{ width: 4, height: 4, borderRadius: 2, background: '#a2aabe' }} />
+            <span style={{ width: 4, height: 4, borderRadius: 2, background: '#a2aabe' }} />
+          </span>
+        )}
         <span
+          className="card-title"
           style={{
             flex: 1,
             fontFamily: 'var(--ui)',
@@ -171,30 +194,41 @@ export function FloatingCard({
         >
           {title}
         </span>
-        {/* Maximize / restore button */}
-        <button
-          onClick={toggleMax}
-          style={{
-            width: 26,
-            height: 26,
-            borderRadius: 7,
-            border: 'none',
-            background: 'transparent',
-            color: '#a2aabe',
-            display: 'grid',
-            placeItems: 'center',
-            cursor: 'pointer',
-            flexShrink: 0,
-          }}
-          title={maximized ? 'Restore' : 'Maximize'}
+
+        {/* Pin / Unpin button */}
+        <TitleBtn
+          onClick={togglePin}
+          title={pinned ? 'Unpin to move freely' : 'Pin in place'}
+          active={pinned}
         >
           <Icon size={14}>
-            {maximized
-              ? <path d="M4 8h8v8H4zM8 4h8v8" />
-              : <path d="M4 4h16v16H4z" />
-            }
+            <path
+              d="M12 2L12 10M8 10L16 10L14.5 16H9.5L8 10ZM12 16L12 22"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </Icon>
-        </button>
+        </TitleBtn>
+
+        {/* Maximize / restore button — only when unpinned */}
+        {!pinned && (
+          <TitleBtn onClick={toggleMax} title={maximized ? 'Restore' : 'Maximize'}>
+            <Icon size={16}>
+              {maximized
+                ? <path d="M4 8h8v8H4zM8 4h8v8" />
+                : <>
+                    <path d="M14 3h7v7" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M10 21H3v-7" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                    <line x1="14" y1="10" x2="21" y2="3" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+                    <line x1="10" y1="14" x2="3" y2="21" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+                  </>
+              }
+            </Icon>
+          </TitleBtn>
+        )}
       </div>
 
       {/* Content */}
@@ -202,8 +236,8 @@ export function FloatingCard({
         {children}
       </div>
 
-      {/* Resize handle (bottom-right corner) */}
-      {!maximized && (
+      {/* Resize handle — only when unpinned and not maximized */}
+      {!pinned && !maximized && (
         <div
           onMouseDown={onResizeStart}
           onTouchStart={onResizeStart}
@@ -227,5 +261,31 @@ export function FloatingCard({
         </div>
       )}
     </div>
+  );
+}
+
+function TitleBtn({ children, onClick, title, active }) {
+  return (
+    <button
+      className="card-btn"
+      data-active={active ? 'true' : 'false'}
+      onClick={onClick}
+      style={{
+        width: 26,
+        height: 26,
+        borderRadius: 7,
+        border: 'none',
+        background: active ? 'rgba(212,245,74,0.15)' : 'transparent',
+        color: active ? 'var(--accent)' : '#a2aabe',
+        display: 'grid',
+        placeItems: 'center',
+        cursor: 'pointer',
+        flexShrink: 0,
+        transition: 'background .12s ease, color .12s ease',
+      }}
+      title={title}
+    >
+      {children}
+    </button>
   );
 }

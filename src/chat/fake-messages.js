@@ -1,0 +1,122 @@
+// Shared pool of fake chat messages for simulating live chat activity.
+
+const USERNAMES = [
+  'xQcFan99', 'CryptoKing', 'LurkMaster', 'PogChampion', 'yolobets',
+  'moonwalker', 'diamondhands', 'degen_trader', 'W_collector', 'chatspammer42',
+  'bull_szn', 'bearslayer', 'hodlgang', 'apestogetherr', 'juicerrrr',
+  'sadge_life', 'pepeLaugh', 'omegalul_andy', 'goblin_mode', 'npc_energy',
+  'copium_dealer', 'based_take', 'ratio_king', 'L_holder', 'W_farmer',
+  'sigma_grindset', 'touch_grass', 'no_shot', 'gigachad_moves', 'actual_bot',
+  'stream_sniper', 'backseater69', 'mod_check', 'ban_worthy', 'sub_only',
+  'emote_spammer', 'clip_chimp', 'raid_boss', 'gifted_sub', 'prime_gaming',
+  'chart_watcher', 'candle_reader', 'fib_retracement', 'rsi_andy', 'macd_cross',
+];
+
+const COLORS = [
+  '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
+  '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9',
+  '#F8C471', '#82E0AA', '#F1948A', '#AED6F1', '#D7BDE2',
+];
+
+const MESSAGES = [
+  "LFG 🚀🚀🚀",
+  "LETS GOOO",
+  "W",
+  "this is insane",
+  "no way",
+  "LMAO",
+  "bruh",
+  "send it",
+  "to the moon",
+  "BUY BUY BUY",
+  "pump it",
+  "chart looking crazy rn",
+  "who else is up rn",
+  "can't sleep the market is moving",
+  "green candles only",
+  "bears in shambles",
+  "imagine selling here lol",
+  "this chat is goated",
+  "real ones know",
+  "trust the process",
+  "we're so back",
+  "it's over... jk we're back",
+  "someone clip that",
+  "WWWWW",
+  "massive W",
+  "called it",
+  "told y'all",
+  "easy money",
+  "free alpha in this chat",
+  "the vibes are immaculate",
+  "chat going crazy",
+  "Pog",
+  "PogU",
+  "KEKW",
+  "omegalul",
+  "based",
+  "ratio",
+  "gg",
+  "gg ez",
+  "hold the line",
+  "diamond hands baby",
+  "paper hands punching the air rn",
+  "this stream is fire",
+  "best stream on the platform",
+  "content",
+  "CONTENT",
+  "banger stream",
+  "never leaving",
+  "chat we're winning",
+  "actual good take",
+  "spitting facts",
+  "fax no printer",
+  "📈📈📈",
+  "💎🙌",
+  "🔥🔥🔥",
+  "EZ Clap",
+  "Sadge",
+  "Copium",
+  "Hopium",
+  "5Head play",
+  "200 IQ",
+  "big brain time",
+  "galaxy brain",
+  "ape in",
+  "full send",
+  "no cap",
+  "on god",
+  "sheeeesh",
+  "W take",
+  "L + ratio",
+  "common W",
+  "rare L",
+  "chat is unhinged today",
+  "mods sleeping",
+  "first time here, this is wild",
+  "been here since day 1",
+  "OG viewer btw",
+];
+
+const BADGES = [null, null, null, null, null, null, 'sub', 'sub', 'mod', 'vip'];
+
+function pick(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+export function generateFakeMessage(platform, channel) {
+  const name = pick(USERNAMES);
+  return {
+    id: `${platform}:fake:${Date.now()}:${Math.random().toString(36).slice(2, 8)}`,
+    platform,
+    user: {
+      name,
+      color: pick(COLORS),
+      badge: pick(BADGES),
+      platform,
+    },
+    text: pick(MESSAGES),
+    ts: Date.now(),
+    channel,
+  };
+}

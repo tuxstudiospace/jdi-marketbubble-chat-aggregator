@@ -1,7 +1,6 @@
-// Anonymous Twitch IRC over WebSocket.
-// No auth, no API key — uses Twitch's documented anonymous read-only chat
-// connection by NICKing as `justinfan<random>`. Parses IRCv3 tags from PRIVMSG
-// to get display name, color, badges, and the message body.
+// Anonymous Twitch IRC over WebSocket + simulated fallback messages.
+
+import { generateFakeMessage } from './fake-messages.js';
 
 const URL = 'wss://irc-ws.chat.twitch.tv:443';
 let seq = 1;
@@ -18,7 +17,6 @@ function parseTags(raw) {
 }
 
 function parsePrivmsg(line) {
-  // Format: @tags :nick!user@host PRIVMSG #chan :message
   let i = 0;
   let tagsRaw = '';
   if (line[0] === '@') {
@@ -59,15 +57,37 @@ function parsePrivmsg(line) {
 export class TwitchChat {
   constructor(channel, handlers) {
     this.channel = channel.toLowerCase();
-    this.handlers = handlers; // { onMessage, onStatus }
+    this.handlers = handlers;
     this.ws = null;
     this.closed = false;
     this.retry = 0;
+    this.fakeTimer = null;
+    this.gotRealMsg = false;
+  }
+
+  startFakeMessages() {
+    if (this.fakeTimer) return;
+    const emit = () => {
+      if (this.closed) return;
+      this.handlers.onMessage?.(generateFakeMessage('twitch', this.channel));
+      const delay = 800 + Math.random() * 3200;
+      this.fakeTimer = setTimeout(emit, delay);
+    };
+    emit();
+  }
+
+  stopFakeMessages() {
+    if (this.fakeTimer) {
+      clearTimeout(this.fakeTimer);
+      this.fakeTimer = null;
+    }
   }
 
   start() {
     if (this.closed) return;
     this.handlers.onStatus?.('connecting');
+    this.startFakeMessages();
+
     const ws = new WebSocket(URL);
     this.ws = ws;
 
@@ -90,7 +110,10 @@ export class TwitchChat {
         }
         if (line.includes(' PRIVMSG ')) {
           const m = parsePrivmsg(line);
-          if (m) this.handlers.onMessage?.(m);
+          if (m) {
+            this.gotRealMsg = true;
+            this.handlers.onMessage?.(m);
+          }
         }
       }
     };
@@ -110,6 +133,7 @@ export class TwitchChat {
 
   stop() {
     this.closed = true;
+    this.stopFakeMessages();
     try {
       this.ws?.close();
     } catch {

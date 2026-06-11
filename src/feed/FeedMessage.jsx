@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { Avatar, SourceBadge } from '../components/Avatar.jsx';
 import { PLATFORMS } from '../data/platforms.js';
 import { IconReply, IconPin, IconStar, IconHeart, IconHide, IconExternal } from '../icons/index.jsx';
@@ -17,6 +17,7 @@ function UserBadge({ kind }) {
   const label = { sub: 'SUB', mod: 'MOD', vip: 'VIP', verified: '✓', og: 'OG', broadcaster: 'STREAMER' }[kind] || kind.toUpperCase();
   return (
     <span
+      className="feed-msg-badge"
       style={{
         height: 17,
         padding: '0 6px',
@@ -61,6 +62,7 @@ function PostPill() {
 function QuickAction({ children, title, onClick }) {
   return (
     <button
+      className="feed-msg-action"
       title={title}
       onClick={onClick}
       style={{
@@ -93,36 +95,15 @@ function QuickAction({ children, title, onClick }) {
 
 export function FeedMessage({ m, now, accent, selected, onSelect, compact, isNew, onAction }) {
   const [hov, setHov] = useState(false);
-  const [showDetail, setShowDetail] = useState(false);
-  const rowRef = useRef(null);
-  const timerRef = useRef(null);
   const pad = compact ? '9px 14px' : '13px 16px';
   const nameColor = m.user.color || '#f0f3fb';
 
-  const onEnter = () => {
-    setHov(true);
-    timerRef.current = setTimeout(() => setShowDetail(true), 400);
-  };
-  const onLeave = () => {
-    setHov(false);
-    setShowDetail(false);
-    clearTimeout(timerRef.current);
-  };
-
   return (
     <div
-      ref={rowRef}
-      onClick={() => onSelect(m)}
-      onMouseEnter={onEnter}
-      onMouseLeave={onLeave}
+      className="feed-message"
       style={{
-        display: 'flex',
-        gap: 12,
-        padding: pad,
         borderRadius: compact ? 12 : 16,
-        cursor: 'pointer',
-        position: 'relative',
-        background: selected ? 'rgba(255,255,255,0.07)' : hov ? 'rgba(255,255,255,0.035)' : 'transparent',
+        background: selected ? 'rgba(255,255,255,0.07)' : 'transparent',
         boxShadow: selected
           ? 'inset 0 0 0 1px rgba(212,245,74,0.35)'
           : m.highlight
@@ -130,165 +111,90 @@ export function FeedMessage({ m, now, accent, selected, onSelect, compact, isNew
             : 'none',
         animation: isNew ? 'msgIn .34s cubic-bezier(.2,.7,.3,1)' : 'none',
         transition: 'background .14s ease',
+        overflow: 'hidden',
       }}
     >
-      <Avatar user={m.user} size={compact ? 30 : 38} accent={accent} tone="dark" />
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 9, flexWrap: 'wrap' }}>
-          <span
-            style={{
-              fontFamily: 'var(--ui)',
-              fontWeight: 600,
-              fontSize: compact ? 13 : 14,
-              color: nameColor,
-            }}
-          >
-            {m.user.name}
-          </span>
-          {m.user.badge && <UserBadge kind={m.user.badge} />}
-          <SourceBadge id={m.platform} accent={accent} compact={compact} tone="dark" />
-          {m.kind === 'post' && <PostPill />}
-          <span style={{ fontFamily: 'var(--ui)', fontSize: 12, color: '#7b859c' }}>{ago(m.ts, now)}</span>
-          {m.highlight && (
-            <span
-              style={{
-                fontFamily: 'var(--ui)',
-                fontSize: 11,
-                color: 'var(--accent)',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 4,
-                fontWeight: 600,
-              }}
-            >
-              <IconStar size={12} /> mention
-            </span>
-          )}
-        </div>
-        <div
-          style={{
-            marginTop: 4,
-            fontSize: compact ? 13.5 : 14.5,
-            lineHeight: 1.45,
-            color: '#cdd3e2',
-            textWrap: 'pretty',
-            wordBreak: 'break-word',
-          }}
-        >
-          {m.text}
-        </div>
-        {m.likes > 0 && !compact && (
-          <div
-            style={{
-              marginTop: 7,
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-              color: '#8d97ac',
-              fontFamily: 'var(--ui)',
-              fontSize: 12,
-            }}
-          >
-            <IconHeart size={13} /> {m.likes}
-          </div>
-        )}
-      </div>
-
-      {/* Quick action buttons on hover */}
+      {/* Message row */}
       <div
+        onClick={() => onSelect(selected ? null : m)}
+        onMouseEnter={() => setHov(true)}
+        onMouseLeave={() => setHov(false)}
         style={{
           display: 'flex',
-          gap: 5,
-          alignItems: 'flex-start',
-          opacity: hov ? 1 : 0,
-          transform: hov ? 'translateY(0)' : 'translateY(-2px)',
-          transition: 'opacity .14s ease, transform .14s ease',
-          pointerEvents: hov ? 'auto' : 'none',
+          gap: 12,
+          padding: pad,
+          cursor: 'pointer',
+          background: hov && !selected ? 'rgba(255,255,255,0.035)' : 'transparent',
+          transition: 'background .14s ease',
         }}
       >
-        <QuickAction title="Reply" onClick={(e) => { e.stopPropagation(); onAction('reply', m); }}>
-          <IconReply size={15} />
-        </QuickAction>
-        <QuickAction title="Pin" onClick={(e) => { e.stopPropagation(); onAction('pin', m); }}>
-          <IconPin size={15} />
-        </QuickAction>
-        <QuickAction title="Important" onClick={(e) => { e.stopPropagation(); onAction('important', m); }}>
-          <IconStar size={15} />
-        </QuickAction>
-      </div>
+        <Avatar user={m.user} size={compact ? 30 : 38} accent={accent} tone="dark" />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 9, flexWrap: 'wrap' }}>
+            <span className="feed-msg-name" style={{ fontFamily: 'var(--ui)', fontWeight: 600, fontSize: compact ? 13 : 14, color: nameColor }}>
+              {m.user.name}
+            </span>
+            {m.user.badge && <UserBadge kind={m.user.badge} />}
+            <SourceBadge id={m.platform} accent={accent} compact={compact} tone="dark" />
+            {m.kind === 'post' && <PostPill />}
+            <span className="feed-msg-time" style={{ fontFamily: 'var(--ui)', fontSize: 12, color: '#7b859c' }}>{ago(m.ts, now)}</span>
+            {m.highlight && (
+              <span style={{ fontFamily: 'var(--ui)', fontSize: 11, color: 'var(--accent)', display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: 600 }}>
+                <IconStar size={12} /> mention
+              </span>
+            )}
+          </div>
+          <div className="feed-msg-text" style={{ marginTop: 4, fontSize: compact ? 13.5 : 14.5, lineHeight: 1.45, color: '#cdd3e2', textWrap: 'pretty', wordBreak: 'break-word' }}>
+            {m.text}
+          </div>
+          {m.likes > 0 && !compact && (
+            <div className="feed-msg-likes" style={{ marginTop: 7, display: 'inline-flex', alignItems: 'center', gap: 6, color: '#8d97ac', fontFamily: 'var(--ui)', fontSize: 12 }}>
+              <IconHeart size={13} /> {m.likes}
+            </div>
+          )}
+        </div>
 
-      {/* Hover detail popover */}
-      {showDetail && (
+        {/* Quick action buttons on hover */}
         <div
           style={{
-            position: 'absolute',
-            right: '100%',
-            top: 0,
-            marginRight: 8,
-            width: 280,
-            padding: '16px 18px',
-            borderRadius: 18,
-            background: 'rgba(255,255,255,0.92)',
-            backdropFilter: 'blur(24px) saturate(140%)',
-            WebkitBackdropFilter: 'blur(24px) saturate(140%)',
-            border: '1px solid rgba(255,255,255,0.8)',
-            boxShadow: '0 16px 48px rgba(14,22,42,0.22), 0 0 0 1px rgba(14,22,42,0.04)',
-            zIndex: 100,
-            animation: 'msgIn .18s ease',
-            pointerEvents: 'auto',
+            display: 'flex', gap: 5, alignItems: 'flex-start',
+            opacity: hov ? 1 : 0, transform: hov ? 'translateY(0)' : 'translateY(-2px)',
+            transition: 'opacity .14s ease, transform .14s ease', pointerEvents: hov ? 'auto' : 'none',
           }}
-          onClick={(e) => e.stopPropagation()}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 11, marginBottom: 14 }}>
-            <Avatar user={m.user} size={42} accent={accent} tone="light" />
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontFamily: 'var(--ui)', fontWeight: 700, fontSize: 15, color: '#0c1220' }}>
-                {m.user.name}
-              </div>
-              <div style={{ marginTop: 4 }}>
-                <SourceBadge id={m.platform} accent={accent} tone="light" />
-              </div>
-            </div>
+          <QuickAction title="Reply" onClick={(e) => { e.stopPropagation(); onAction('reply', m); }}><IconReply size={15} /></QuickAction>
+          <QuickAction title="Pin" onClick={(e) => { e.stopPropagation(); onAction('pin', m); }}><IconPin size={15} /></QuickAction>
+          <QuickAction title="Important" onClick={(e) => { e.stopPropagation(); onAction('important', m); }}><IconStar size={15} /></QuickAction>
+        </div>
+      </div>
+
+      {/* Accordion detail section */}
+      {selected && (
+        <div
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            padding: '0 16px 14px',
+            marginLeft: compact ? 42 : 50,
+            animation: 'accordionIn .2s ease',
+          }}
+        >
+          <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', marginBottom: 10 }} />
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            <AccordionBtn onClick={() => onAction('reply', m)} icon={<IconReply size={13} />}>Reply</AccordionBtn>
+            <AccordionBtn onClick={() => onAction('pin', m)} icon={<IconPin size={13} />}>Pin</AccordionBtn>
+            <AccordionBtn onClick={() => onAction('important', m)} icon={<IconStar size={13} />}>Important</AccordionBtn>
+            <AccordionBtn onClick={() => onAction('hide', m)} icon={<IconHide size={13} />}>Hide</AccordionBtn>
+            <AccordionBtn onClick={() => onAction('open', m)} icon={<IconExternal size={13} />} accent>
+              Open on {PLATFORMS[m.platform]?.name}
+            </AccordionBtn>
           </div>
-          <div
-            style={{
-              padding: '12px 14px',
-              borderRadius: 14,
-              background: 'rgba(199,214,240,0.4)',
-              border: '1px solid rgba(255,255,255,0.6)',
-              fontSize: 13.5,
-              lineHeight: 1.5,
-              color: '#0e1424',
-              wordBreak: 'break-word',
-              marginBottom: 12,
-            }}
-          >
-            {m.text}
-            <div style={{ marginTop: 8, fontSize: 11.5, color: '#7a8294', fontFamily: 'var(--ui)' }}>
-              {ago(m.ts, now)} ago
-            </div>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-            <HoverAction onClick={() => onAction('reply', m)} icon={<IconReply size={14} />}>Reply</HoverAction>
-            <HoverAction onClick={() => onAction('pin', m)} icon={<IconPin size={14} />}>Pin</HoverAction>
-            <HoverAction onClick={() => onAction('important', m)} icon={<IconStar size={14} />}>Important</HoverAction>
-            <HoverAction onClick={() => onAction('hide', m)} icon={<IconHide size={14} />}>Hide</HoverAction>
-          </div>
-          <HoverAction
-            onClick={() => onAction('open', m)}
-            icon={<IconExternal size={14} />}
-            dark
-            style={{ marginTop: 6, width: '100%' }}
-          >
-            Open on {PLATFORMS[m.platform]?.name}
-          </HoverAction>
         </div>
       )}
     </div>
   );
 }
 
-function HoverAction({ children, icon, onClick, dark, style }) {
+function AccordionBtn({ children, icon, onClick, accent }) {
   const [h, setH] = useState(false);
   return (
     <button
@@ -296,21 +202,26 @@ function HoverAction({ children, icon, onClick, dark, style }) {
       onMouseEnter={() => setH(true)}
       onMouseLeave={() => setH(false)}
       style={{
-        height: 34,
+        height: 30,
+        padding: '0 12px',
         borderRadius: 9999,
-        display: 'flex',
+        display: 'inline-flex',
         alignItems: 'center',
-        justifyContent: 'center',
         gap: 6,
-        background: dark ? (h ? '#1c2335' : '#0e1424') : (h ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.6)'),
-        color: dark ? '#f1f3fa' : '#0e1424',
-        border: dark ? 'none' : '1px solid rgba(14,22,42,0.08)',
+        background: accent
+          ? (h ? 'var(--accent-deep)' : 'rgba(212,245,74,0.12)')
+          : (h ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.06)'),
+        color: accent
+          ? (h ? 'var(--accent-ink)' : 'var(--accent)')
+          : (h ? '#f0f3fb' : '#b0b8cc'),
+        border: accent
+          ? '1px solid rgba(212,245,74,0.28)'
+          : '1px solid rgba(255,255,255,0.08)',
         fontFamily: 'var(--ui)',
         fontWeight: 600,
-        fontSize: 12,
+        fontSize: 11.5,
         cursor: 'pointer',
-        transition: 'background .12s ease',
-        ...style,
+        transition: 'all .12s ease',
       }}
     >
       {icon}{children}

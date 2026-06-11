@@ -71,6 +71,10 @@ body {
 input, button { font-family: inherit; }
 button { cursor: pointer; }
 
+@keyframes accordionIn {
+  from { opacity: 0; max-height: 0; }
+  to   { opacity: 1; max-height: 300px; }
+}
 @keyframes msgIn {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -90,6 +94,163 @@ button { cursor: pointer; }
 }
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: 0.001ms !important; }
+}
+
+/* Dark mode */
+html.dark {
+  --bone: #e8ecf4;
+  --hair: rgba(255, 255, 255, 0.08);
+  --hair-strong: rgba(255, 255, 255, 0.14);
+}
+html.dark body {
+  background:
+    radial-gradient(1200px 700px at 80% -10%, hsla(var(--glow-hue), 40%, 20%, 0.6) 0%, transparent 60%),
+    linear-gradient(135deg, #0c1120 0%, #121828 55%, #0e1424 100%);
+  color: #e8ecf4;
+}
+html.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  background-clip: padding-box;
+}
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+  background-clip: padding-box;
+}
+
+/* WSJ Theme */
+html.wsj {
+  --sans: 'Playfair Display', 'Georgia', 'Times New Roman', serif;
+  --ui: 'Source Serif 4', 'Georgia', serif;
+  --accent: #222222;
+  --accent-deep: #111111;
+  --accent-ink: #ffffff;
+  --bone: #222222;
+  --hair: rgba(0,0,0,0.12);
+  --hair-strong: rgba(0,0,0,0.2);
+}
+html.wsj body {
+  background: #F5F1EB;
+  color: #222222;
+}
+html.wsj .sidebar-brand {
+  font-family: 'Domine', 'DM Sans', 'Inter', system-ui, serif !important;
+}
+html.wsj .floating-card {
+  background: #FFFDF8 !important;
+  border-color: #C8C2B8 !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+  border-radius: 4px !important;
+}
+html.wsj .floating-card .card-titlebar {
+  background: #F0EBE3 !important;
+  border-bottom-color: #C8C2B8 !important;
+}
+html.wsj .floating-card .card-titlebar .card-title {
+  color: #222 !important;
+}
+html.wsj .floating-card .card-titlebar .card-btn {
+  color: #555 !important;
+}
+html.wsj .floating-card .card-titlebar .card-btn[data-active="true"] {
+  background: rgba(0,0,0,0.1) !important;
+  color: #222 !important;
+}
+html.wsj .feed-panel {
+  background: #FFFDF8 !important;
+  border-color: #C8C2B8 !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08) !important;
+}
+html.wsj .feed-header {
+  border-bottom-color: #C8C2B8 !important;
+}
+html.wsj .feed-header span {
+  color: #222 !important;
+}
+html.wsj .feed-header .feed-count-badge {
+  background: #222 !important;
+  color: #fff !important;
+}
+html.wsj .emoji-picker {
+  background: #FBF9F4 !important;
+  border-color: #C8C2B8 !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;
+}
+html.wsj .feed-header button {
+  background: rgba(0,0,0,0.06) !important;
+  border-color: #C8C2B8 !important;
+  color: #333 !important;
+}
+html.wsj .chat-input-bar {
+  border-top-color: #C8C2B8 !important;
+  background: #F0EBE3 !important;
+}
+html.wsj .chat-input-bar input {
+  background: #FFFDF8 !important;
+  border-color: #C8C2B8 !important;
+  color: #222 !important;
+}
+html.wsj .chat-input-bar input::placeholder {
+  color: #888 !important;
+}
+html.wsj .chat-input-bar .chat-send-btn {
+  background: #222 !important;
+  color: #fff !important;
+}
+html.wsj .chat-input-bar .chat-emoji-btn {
+  border-color: #C8C2B8 !important;
+  background: #FFFDF8 !important;
+  color: #555 !important;
+}
+html.wsj .video-panel {
+  background: #FFFDF8 !important;
+}
+html.wsj .video-panel .video-tabs {
+  background: #F0EBE3 !important;
+  border-bottom: 1px solid #C8C2B8 !important;
+}
+html.wsj .video-panel .video-tab {
+  border-color: #C8C2B8 !important;
+  color: #333 !important;
+  background: transparent !important;
+}
+html.wsj .video-panel .video-tab[data-active="true"] {
+  background: #222 !important;
+  color: #fff !important;
+  border-color: #222 !important;
+}
+html.wsj .feed-panel ::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.15);
+  background-clip: padding-box;
+}
+html.wsj ::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.12);
+  background-clip: padding-box;
+}
+html.wsj ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0,0,0,0.2);
+  background-clip: padding-box;
+}
+
+/* Dark mode logo inversion */
+html.dark img[src*="brand-icon"] {
+  filter: invert(1) brightness(1.1);
+}
+
+/* WSJ feed: force all chat text to black — covers both mobile (.feed-panel) and desktop (.floating-card) */
+html.wsj .feed-message,
+html.wsj .feed-message *,
+html.wsj .feed-message *::before,
+html.wsj .feed-message *::after {
+  color: #000 !important;
+}
+html.wsj .feed-message .feed-msg-badge {
+  background: rgba(0,0,0,0.08) !important;
+}
+html.wsj .jump-to-present {
+  background: #FBF9F4 !important;
+  color: #333 !important;
+  border-color: #D8D2C8 !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08) !important;
 }
 
 /* Prevent iframe stealing mouse during card drag/resize */

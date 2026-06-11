@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 
 const TWEAKS_STYLE = `
-  .twk-panel{position:fixed;right:16px;bottom:16px;z-index:2147483646;width:280px;
+  .twk-panel{position:fixed;left:290px;bottom:16px;z-index:2147483646;width:280px;
     max-height:calc(100vh - 32px);display:flex;flex-direction:column;
     background:rgba(250,249,247,.78);color:#29261b;
     -webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%);
@@ -48,6 +48,9 @@ const TWEAKS_STYLE = `
     width:42px;height:42px;border-radius:9999px;border:none;cursor:pointer;
     background:rgba(255,255,255,0.85);backdrop-filter:blur(20px);
     box-shadow:0 8px 24px rgba(14,22,42,0.18);display:grid;place-items:center}
+  @media(max-width:768px){
+    .twk-panel{left:8px;right:8px;bottom:8px;width:auto;max-height:70vh}
+  }
 `;
 
 export function useTweaks(defaults, storageKey = 'tweaks') {
@@ -74,31 +77,20 @@ export function useTweaks(defaults, storageKey = 'tweaks') {
   return [values, setTweak];
 }
 
-export function TweaksPanel({ title = 'Tweaks', children }) {
-  const [open, setOpen] = useState(false);
+export function TweaksPanel({ title = 'Tweaks', children, open, onClose }) {
+  if (!open) return null;
   return (
     <>
       <style>{TWEAKS_STYLE}</style>
-      {!open && (
-        <button className="twk-fab" aria-label="Open tweaks" onClick={() => setOpen(true)}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#29261b" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M4 8h10M18 8h2M4 16h4M12 16h8" />
-            <circle cx="16" cy="8" r="2" />
-            <circle cx="10" cy="16" r="2" />
-          </svg>
-        </button>
-      )}
-      {open && (
-        <div className="twk-panel" data-omelette-chrome="">
-          <div className="twk-hd">
-            <b>{title}</b>
-            <button className="twk-x" aria-label="Close tweaks" onClick={() => setOpen(false)}>
-              ✕
-            </button>
-          </div>
-          <div className="twk-body">{children}</div>
+      <div className="twk-panel" data-omelette-chrome="">
+        <div className="twk-hd">
+          <b>{title}</b>
+          <button className="twk-x" aria-label="Close tweaks" onClick={onClose}>
+            ✕
+          </button>
         </div>
-      )}
+        <div className="twk-body">{children}</div>
+      </div>
     </>
   );
 }

@@ -10,61 +10,38 @@ export function hexA(hex, a) {
   return `rgba(${r}, ${g}, ${b}, ${a})`;
 }
 
+function avatarUrl(name, size) {
+  const seed = encodeURIComponent(name || 'anon');
+  return `https://api.dicebear.com/9.x/thumbs/svg?seed=${seed}&size=${size * 2}`;
+}
+
 export function Avatar({ user, size = 38, accent = false, ring = true, tone = 'dark' }) {
   const isLight = tone === 'light';
-  const bg = isLight
-    ? 'linear-gradient(155deg, #cdd8ed, #aebbd7)'
-    : 'linear-gradient(155deg, #2c324a, #1a2034)';
-  const color = isLight ? '#0e1424' : '#eef1f9';
   const innerBorder = isLight
     ? 'inset 0 0 0 1px rgba(255,255,255,0.55)'
     : 'inset 0 0 0 1px rgba(255,255,255,0.06)';
   const brand = PLATFORMS[user.platform]?.brand || '#888';
-
-  if (user.avatar) {
-    return (
-      <img
-        src={user.avatar}
-        alt=""
-        width={size}
-        height={size}
-        style={{
-          width: size,
-          height: size,
-          borderRadius: 9999,
-          flexShrink: 0,
-          objectFit: 'cover',
-          boxShadow:
-            ring && accent ? `${innerBorder}, 0 0 0 1.5px ${hexA(brand, 0.55)}` : innerBorder,
-        }}
-        onError={(e) => {
-          e.currentTarget.style.display = 'none';
-        }}
-      />
-    );
-  }
+  const src = user.avatar || avatarUrl(user.name, size);
 
   return (
-    <div
+    <img
+      src={src}
+      alt=""
+      width={size}
+      height={size}
       style={{
         width: size,
         height: size,
         borderRadius: 9999,
         flexShrink: 0,
-        background: bg,
-        display: 'grid',
-        placeItems: 'center',
-        color,
-        fontFamily: 'var(--ui)',
-        fontWeight: 600,
-        fontSize: size * 0.4,
-        letterSpacing: '0.01em',
+        objectFit: 'cover',
+        background: isLight
+          ? 'linear-gradient(155deg, #cdd8ed, #aebbd7)'
+          : 'linear-gradient(155deg, #2c324a, #1a2034)',
         boxShadow:
           ring && accent ? `${innerBorder}, 0 0 0 1.5px ${hexA(brand, 0.55)}` : innerBorder,
       }}
-    >
-      {user.name?.[0]?.toUpperCase() || '?'}
-    </div>
+    />
   );
 }
 

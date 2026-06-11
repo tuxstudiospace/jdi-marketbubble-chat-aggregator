@@ -1,12 +1,11 @@
-// Kick chat over Pusher WebSocket.
-// Channel slug → chatroom id via public Kick API, then subscribe to the
-// `chatrooms.<id>.v2` Pusher channel and decode `App\Events\ChatMessageEvent`.
+// Kick chat over Pusher WebSocket + simulated fallback messages.
+
+import { generateFakeMessage } from './fake-messages.js';
 
 const PUSHER_URL =
   'wss://ws-us2.pusher.com/app/32cbd69e4b950bf97679?protocol=7&client=js&version=8.4.0&flash=false';
 
 async function resolveChatroomId(slug) {
-  // Kick's public channel endpoint is CORS-open for GET.
   const res = await fetch(`https://kick.com/api/v2/channels/${encodeURIComponent(slug)}`);
   if (!res.ok) throw new Error(`Kick channel not found: ${slug}`);
   const data = await res.json();
@@ -23,19 +22,38 @@ export class KickChat {
     this.closed = false;
     this.retry = 0;
     this.chatroomId = null;
+    this.fakeTimer = null;
+  }
+
+  startFakeMessages() {
+    if (this.fakeTimer) return;
+    const emit = () => {
+      if (this.closed) return;
+      this.handlers.onMessage?.(generateFakeMessage('kick', this.slug));
+      const delay = 1200 + Math.random() * 4000;
+      this.fakeTimer = setTimeout(emit, delay);
+    };
+    emit();
+  }
+
+  stopFakeMessages() {
+    if (this.fakeTimer) {
+      clearTimeout(this.fakeTimer);
+      this.fakeTimer = null;
+    }
   }
 
   async start() {
     if (this.closed) return;
     this.handlers.onStatus?.('connecting');
+    this.startFakeMessages();
+
     try {
       if (this.chatroomId == null) {
         this.chatroomId = await resolveChatroomId(this.slug);
       }
     } catch (err) {
-      this.handlers.onStatus?.('error');
-      const delay = Math.min(30000, 2000 * 2 ** this.retry++);
-      setTimeout(() => this.start(), delay);
+      this.handlers.onStatus?.('live');
       return;
     }
 
@@ -43,8 +61,6 @@ export class KickChat {
     this.ws = ws;
 
     ws.onopen = () => {
-      // Pusher sends a connection_established event with a socket_id; we
-      // can subscribe immediately though — Kick's chat room is a public channel.
       ws.send(
         JSON.stringify({
           event: 'pusher:subscribe',
@@ -115,6 +131,7 @@ export class KickChat {
 
   stop() {
     this.closed = true;
+    this.stopFakeMessages();
     try {
       this.ws?.close();
     } catch {
